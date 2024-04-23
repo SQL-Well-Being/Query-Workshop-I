@@ -1,3 +1,59 @@
+USE municipios;
+
+-- Busqueda de Strings --
+
+-- Punto 1 --
+SELECT nom FROM comunidad WHERE nom LIKE '%Castilla%' AND nom NOT LIKE '%Mancha%';
+
+-- Punto 2 -- 
+SELECT *  FROM municipio
+	WHERE (LENGTH(nom) >= 20) AND (LENGTH(nom) - LENGTH(REPLACE(LOWER(nom),  'x', '')) = 1);
+
+-- Punto 3 --
+SELECT * FROM municipio
+	WHERE  
+		((LENGTH(nom) - LENGTH(REGEXP_REPLACE(nom, '[aáàAÁÀ]', '', 1, 1))) + 
+        (LENGTH(nom) - LENGTH(REGEXP_REPLACE(nom, '[eéèEÉÈ]', '', 1, 1))) +
+        (LENGTH(nom) - LENGTH(REGEXP_REPLACE(nom, '[iíìIÍÌ]', '', 1, 1))) +
+        (LENGTH(nom) - LENGTH(REGEXP_REPLACE(nom, '[oóòOÓÒ]', '', 1, 1))) + 
+        (LENGTH(nom) - LENGTH(REGEXP_REPLACE(nom, '[uúùUÚÙ]', '', 1, 1))) ) = 1;
+
+-- Busqueda Numerica --
+
+-- Punto 1 --
+SELECT nom FROM municipio ORDER BY poblacion2003 DESC LIMIT 10;
+
+-- Punto 2 --
+SELECT nom FROM municipio ORDER BY poblacion2003 / superficie DESC LIMIT 5;
+
+-- Punto 3 --
+SELECT nom FROM municipio WHERE (superficie < (SELECT AVG(superficie) / 10 FROM municipio));
+
+-- Punto 4 --
+SELECT nom, poblacion2001, poblacion1991 FROM municipio WHERE (poblacion2001 > (poblacion1991 * 10) AND poblacion1991 > 0);
+
+-- Joins --
+
+-- Punto 1 --
+SELECT municipio.nom, comunidad.nom FROM municipio, comunidad WHERE municipio.ca_id = comunidad.ca_id AND comunidad.nom = "Catalunya" ORDER BY municipio.nom; 
+SELECT comunidad.nom, SUM(municipio.poblacion2003) FROM municipio, comunidad WHERE municipio.ca_id= comunidad.ca_id GROUP BY comunidad.nom ORDER BY comunidad.nom; 
+
+-- Punto 2 --
+SELECT municipio.nom, comunidad.nom FROM municipio INNER JOIN comunidad ON municipio.ca_id = comunidad.ca_id WHERE comunidad.nom = "Catalunya" ORDER BY municipio.nom;
+SELECT comunidad.nom, SUM(municipio.poblacion2003) AS superficie_total FROM municipio INNER JOIN comunidad ON municipio.ca_id = comunidad.ca_id GROUP BY comunidad.nom ORDER BY comunidad.nom;
+
+-- Punto 3 --
+SELECT comunidad.nom, SUM(municipio.superficie) FROM municipio INNER JOIN comunidad ON municipio.ca_id = comunidad.ca_id GROUP BY comunidad.nom;
+
+-- Punto 4 --
+SELECT comunidad.nom, SUM(municipio.poblacion2001) - SUM(municipio.poblacion1991) AS variacion FROM municipio INNER JOIN comunidad ON municipio.ca_id = comunidad.ca_id GROUP BY comunidad.nom;
+
+-- Punto 5 --
+SELECT comunidad.nom, SUM(municipio.superficie) AS superficie_total FROM municipio INNER JOIN comunidad ON municipio.ca_id = comunidad.ca_id WHERE comunidad.nom = "Galicia";
+
+-- AR --
+
+USE eventos;
 -- Punto A --
 SELECT confe_nombre, confe_duracion
 	FROM conferencia
@@ -133,3 +189,9 @@ SELECT AVG(con_horas_trabajadas) AS 'promedio_horas_trabajadas' FROM
     INNER JOIN conferencia ON evento.confe_id = conferencia.confe_id
     INNER JOIN conferencista ON conferencia.con_id = conferencista.con_id
     WHERE salon.sal_tipo = 'Auditorio';
+
+-- Viajes --
+
+USE viajes;
+
+SELECT ciudad.ciu_nombre, ciudad_destino.ciu_nombre FROM viaje INNER JOIN ciudad ON viaje.ciu_origen_id = ciudad.ciu_id INNER JOIN ciudad AS ciudad_destino ON viaje.ciu_destino_id = ciudad_destino.ciu_id;
